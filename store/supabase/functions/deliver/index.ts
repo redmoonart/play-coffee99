@@ -150,6 +150,19 @@ Deno.serve(async (req) => {
       })).json();
 
       const c = cap?.purchase_units?.[0]?.payments?.captures?.[0];
+      const dbg = {
+        at: new Date().toISOString(), order: orderID, orderStatus: cap?.status, capStatus: c?.status,
+        val: c?.amount?.value, cur: c?.amount?.currency_code, expect: AMOUNT + " " + CURRENCY,
+        ppError: cap?.name || cap?.message || null, buyer: buyer || null,
+      };
+      // best-effort debug write to storage so we can inspect the outcome
+      try {
+        await fetch(`${SUPA_URL}/storage/v1/object/store/debug_last.json`, {
+          method: "POST",
+          headers: { apikey: SR, Authorization: `Bearer ${SR}`, "Content-Type": "application/json", "x-upsert": "true" },
+          body: JSON.stringify(dbg),
+        });
+      } catch (_e) { /* ignore */ }
       const paid = cap.status === "COMPLETED" && c?.status === "COMPLETED"
         && c?.amount?.value === AMOUNT && c?.amount?.currency_code === CURRENCY;
       if (!paid) return json({ error: "payment_not_verified", detail: cap }, 402);
