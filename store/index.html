@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Play Coffee — شراء الترخيص</title>
+<!-- ================================================================
+     ملاحظة الإعداد: عدّل القيم الثلاث في قسم CONFIG بالأسفل فقط.
+     ================================================================ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;900&family=Tajawal:wght@400;500;700&display=swap">
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#14100d; --bg-2:#1d1712; --bg-3:#261e17; --line:#3a2e23;
+    --ink:#f3e9dc; --ink-soft:#c3b3a0; --ink-dim:#8f8172;
+    --amber:#e8a33d; --amber-deep:#c9812a; --teal:#37d0c4; --good:#4ecb8f; --danger:#e5624a;
+    --font-d:"Cairo","Tajawal",system-ui,sans-serif;
+    --font-b:"Tajawal","Cairo",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    min-height:100vh; direction:rtl; text-align:right;
+    background:
+      radial-gradient(1000px 500px at 85% -10%, rgba(232,163,61,.10), transparent 60%),
+      radial-gradient(800px 460px at 5% 6%, rgba(55,208,196,.07), transparent 55%),
+      var(--bg);
+    color:var(--ink); font-family:var(--font-b); line-height:1.7;
+    display:flex; align-items:center; justify-content:center; padding:24px 16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .card{
+    width:100%; max-width:460px; background:linear-gradient(160deg,var(--bg-2),var(--bg-3));
+    border:1px solid var(--line); border-radius:22px; padding:28px 24px;
+    box-shadow:0 40px 80px -30px rgba(0,0,0,.7);
+  }
+  .brand{display:flex;align-items:center;gap:.6rem;font-family:var(--font-d);font-weight:900;font-size:1.3rem;justify-content:center;margin-bottom:.4rem}
+  .brand .cup{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,var(--amber),var(--amber-deep));color:#2a1c0a;font-size:1.2rem}
+  .brand b{color:var(--amber)}
+  h1{font-family:var(--font-d);font-weight:900;font-size:1.35rem;text-align:center;margin:.6rem 0 .2rem}
+  .sub{color:var(--ink-soft);text-align:center;font-size:.95rem;margin-bottom:1.4rem}
+  .price{text-align:center;font-family:var(--font-d);font-weight:900;font-size:2.6rem;line-height:1;margin:.4rem 0}
+  .price small{font-size:1rem;color:var(--ink-dim);font-weight:500}
+  .per{text-align:center;color:var(--ink-dim);font-size:.85rem;margin-bottom:1.2rem}
+  ul{list-style:none;padding:0;margin:0 0 1.4rem;display:flex;flex-direction:column;gap:.6rem}
+  li{display:flex;gap:.55rem;color:var(--ink-soft);font-size:.95rem}
+  li::before{content:"✓";color:var(--good);font-weight:900}
+  .field{margin-bottom:1rem}
+  label{display:block;font-size:.85rem;color:var(--ink-soft);margin-bottom:.35rem;font-weight:700}
+  input{width:100%;padding:.75rem .9rem;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:1rem}
+  input:focus{outline:2px solid var(--amber);border-color:transparent}
+  #paypal{min-height:48px;margin-top:.4rem}
+  .note{font-size:.78rem;color:var(--ink-dim);text-align:center;margin-top:1rem;line-height:1.6}
+  .result{display:none;text-align:center}
+  .result.show{display:block}
+  .badge{display:inline-flex;align-items:center;gap:.4rem;color:var(--good);font-weight:700;font-family:var(--font-d);margin-bottom:.8rem}
+  .code{font-family:"Cairo",monospace;font-weight:900;font-size:1.5rem;letter-spacing:.05em;color:var(--amber);background:var(--bg);border:1px dashed var(--amber);border-radius:14px;padding:1rem;word-break:break-all;user-select:all}
+  .copy{margin-top:.9rem;font-family:var(--font-b);font-weight:700;background:var(--amber);color:#2a1c0a;border:none;border-radius:999px;padding:.6rem 1.4rem;cursor:pointer}
+  .steps{text-align:right;margin-top:1.4rem;color:var(--ink-soft);font-size:.9rem}
+  .err{display:none;color:var(--danger);text-align:center;font-weight:700;margin-top:1rem}
+  .err.show{display:block}
+  .spin{display:none;text-align:center;color:var(--ink-soft);margin-top:.6rem}
+  .spin.show{display:block}
+</style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand"><span class="cup">☕</span> Play <b>Coffee</b></div>
+
+    <!-- شاشة الشراء -->
+    <section id="buy">
+      <h1>ترخيص Play Coffee</h1>
+      <p class="sub">رخصة مدى الحياة لجهاز واحد</p>
+      <div class="price" id="priceLabel">$20 <small>USD</small></div>
+      <p class="per">دفعة واحدة · بدون رسوم شهرية</p>
+      <ul>
+        <li>تفعيل فوري بعد الدفع مباشرة</li>
+        <li>إدارة كاملة لأجهزة الصالة</li>
+        <li>يعمل بدون إنترنت بعد التفعيل</li>
+        <li>تحديثات ودعم</li>
+      </ul>
+      <div class="field">
+        <label for="email">بريدك الإلكتروني (نرسل الكود له احتياطياً)</label>
+        <input id="email" type="email" inputmode="email" placeholder="example@email.com" autocomplete="email">
+      </div>
+      <div id="paypal"></div>
+      <div class="spin" id="spin">جارٍ تأكيد الدفع وتجهيز كودك…</div>
+      <div class="err" id="err"></div>
+      <p class="note">الدفع آمن عبر PayPal. لا نحفظ بيانات بطاقتك.</p>
+    </section>
+
+    <!-- شاشة النجاح -->
+    <section id="done" class="result">
+      <div class="badge">✅ تم الدفع بنجاح</div>
+      <h1 style="margin-top:0">هذا رمز التفعيل الخاص بك</h1>
+      <div class="code" id="codeOut">—</div>
+      <button class="copy" id="copyBtn" type="button">نسخ الكود</button>
+      <div class="steps">
+        <strong>خطوات التفعيل:</strong><br>
+        ١) افتح تطبيق Play Coffee على جهازك.<br>
+        ٢) أدخل هذا الكود في شاشة التفعيل.<br>
+        ٣) اضغط "تفعيل" — ويعمل التطبيق مدى الحياة.
+      </div>
+      <p class="note">احتفظ بالكود. يعمل على جهاز واحد فقط.</p>
+    </section>
+  </main>
+
+  <script>
+  /* =================== CONFIG — عدّل هذه الثلاثة فقط =================== */
+  const CONFIG = {
+    // من: developer.paypal.com → تطبيقك → Client ID  (يبدأ عادةً بـ A...)
+    PAYPAL_CLIENT_ID: "ضع_PAYPAL_CLIENT_ID_هنا",
+    // رابط دالة Supabase: https://<مشروعك>.supabase.co/functions/v1/deliver
+    EDGE_URL: "https://dobpocmsdtftudwfloaf.supabase.co/functions/v1/deliver",
+    // مفتاح anon العام (من Supabase → Settings → API). عام وآمن.
+    SUPABASE_ANON: "ضع_SUPABASE_ANON_KEY_هنا",
+    CURRENCY: "USD"
+  };
+  /* =================================================================== */
+
+  const $ = (id) => document.getElementById(id);
+  function showErr(msg){ $("err").textContent = msg; $("err").classList.add("show"); $("spin").classList.remove("show"); }
+
+  async function edge(action, payload){
+    const res = await fetch(CONFIG.EDGE_URL, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+CONFIG.SUPABASE_ANON },
+      body: JSON.stringify(Object.assign({action}, payload||{}))
+    });
+    return res.json();
+  }
+
+  function loadPayPal(){
+    const s = document.createElement("script");
+    s.src = "https://www.paypal.com/sdk/js?client-id="+encodeURIComponent(CONFIG.PAYPAL_CLIENT_ID)+"&currency="+CONFIG.CURRENCY;
+    s.onload = renderButtons;
+    s.onerror = () => showErr("تعذّر تحميل PayPal. تحقق من اتصالك ومن Client ID.");
+    document.head.appendChild(s);
+  }
+
+  function renderButtons(){
+    if(!window.paypal){ showErr("PayPal غير متاح."); return; }
+    window.paypal.Buttons({
+      style:{ shape:"pill", color:"gold", layout:"vertical", label:"pay" },
+      createOrder: async () => {
+        $("err").classList.remove("show");
+        const r = await edge("create");
+        if(!r.id){ showErr("تعذّر بدء الدفع."); throw new Error("create failed"); }
+        return r.id;
+      },
+      onApprove: async (data) => {
+        $("spin").classList.add("show");
+        const email = $("email").value.trim() || null;
+        const r = await edge("capture", { orderID: data.orderID, buyer: email });
+        $("spin").classList.remove("show");
+        if(r.code){
+          $("codeOut").textContent = r.code;
+          $("buy").style.display = "none";
+          $("done").classList.add("show");
+        } else if(r.error === "out_of_stock"){
+          showErr("نفدت الأكواد مؤقتاً. تواصل معنا ونعيد لك المبلغ أو نرسل الكود.");
+        } else {
+          showErr("تم الدفع لكن تعذّر تسليم الكود. احتفظ برقم الطلب وتواصل معنا: "+ (data.orderID||""));
+        }
+      },
+      onError: () => showErr("حدث خطأ أثناء الدفع. حاول مرة أخرى.")
+    }).render("#paypal");
+  }
+
+  $("copyBtn").addEventListener("click", () => {
+    const t = $("codeOut").textContent.trim();
+    const done = () => { const b=$("copyBtn"); const o=b.textContent; b.textContent="تم النسخ ✓"; setTimeout(()=>b.textContent=o,1500); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done).catch(sel);
+    } else sel();
+    function sel(){ const r=document.createRange(); r.selectNode($("codeOut")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); done(); }
+  });
+
+  loadPayPal();
+  </script>
+</body>
+</html>
