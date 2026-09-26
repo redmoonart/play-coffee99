@@ -33,11 +33,15 @@ function emailHtml(code: string): string {
     <div style="text-align:center;font-size:22px;font-weight:900;margin-bottom:8px">Play <span style="color:#37d6e0">Coffee</span></div>
     <p style="color:#a8b7d6;text-align:center;margin:0 0 18px">شكراً لشرائك! هذا رمز التفعيل الخاص بك</p>
     <div style="font-size:24px;font-weight:900;letter-spacing:2px;color:#37d6e0;background:#0f1830;border:1px dashed #37d6e0;border-radius:14px;padding:16px;text-align:center;direction:ltr">${code}</div>
+    <div style="text-align:center;margin-top:16px">
+      <a href="https://dobpocmsdtftudwfloaf.supabase.co/storage/v1/object/public/store/PlayCoffee.apk" style="display:inline-block;color:#08111f;background:#37d6e0;border-radius:999px;padding:12px 22px;text-decoration:none;font-weight:800">⬇ حمّل التطبيق (APK)</a>
+    </div>
     <div style="background:#0f1830;border:1px solid #2a3a68;border-radius:12px;padding:14px;margin-top:18px;color:#a8b7d6;font-size:14px;line-height:1.9">
       <b style="color:#37d6e0">خطوات التفعيل:</b><br>
-      ١) افتح تطبيق Play Coffee على جهازك.<br>
-      ٢) أدخل هذا الكود في شاشة التفعيل.<br>
-      ٣) اضغط «تفعيل» — ويعمل التطبيق مدى الحياة.
+      ١) حمّل التطبيق من الزر أعلاه وثبّته.<br>
+      ٢) افتح تطبيق Play Coffee على جهازك.<br>
+      ٣) أدخل هذا الكود في شاشة التفعيل.<br>
+      ٤) اضغط «تفعيل» — ويعمل التطبيق مدى الحياة.
     </div>
     <p style="color:#7688b0;font-size:12px;text-align:center;margin-top:18px">احتفظ بالكود. يعمل على جهاز واحد فقط.</p>
   </div></body></html>`;
