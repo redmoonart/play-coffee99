@@ -23,6 +23,10 @@ const SR = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const REST = `${SUPA_URL}/rest/v1`;
 const DB = { apikey: SR, Authorization: `Bearer ${SR}`, "Content-Type": "application/json" };
 
+// Stripe (optional card payments)
+const STRIPE_KEY = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
+const STRIPE_AUTH = "Basic " + btoa(STRIPE_KEY + ":");
+
 // Gmail SMTP (optional email delivery)
 const GMAIL_USER = Deno.env.get("GMAIL_USER") ?? "";
 const GMAIL_PASS = Deno.env.get("GMAIL_APP_PASSWORD") ?? "";
@@ -116,6 +120,46 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
   try {
     const { action, orderID, buyer, return_url, cancel_url } = await req.json().catch(() => ({}));
+
+    // ---------- Stripe (card) ----------
+    if (action === "stripe_create") {
+      if (!STRIPE_KEY) return json({ error: "stripe_not_configured" }, 500);
+      const base = (typeof return_url === "string" && return_url) || "https://playcoffee.tiiny.site/";
+      const cents = String(Math.round(parseFloat(AMOUNT) * 100));
+      const form = new URLSearchParams();
+      form.set("mode", "payment");
+      form.set("line_items[0][price_data][currency]", CURRENCY.toLowerCase());
+      form.set("line_items[0][price_data][product_data][name]", "Play Coffee - License (Lifetime)");
+      form.set("line_items[0][price_data][unit_amount]", cents);
+      form.set("line_items[0][quantity]", "1");
+      form.set("success_url", base + (base.includes("?") ? "&" : "?") + "stripe_session={CHECKOUT_SESSION_ID}");
+      form.set("cancel_url", base);
+      const r = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+        method: "POST",
+        headers: { Authorization: STRIPE_AUTH, "Content-Type": "application/x-www-form-urlencoded" },
+        body: form.toString(),
+      });
+      const s = await r.json();
+      return s.url ? json({ url: s.url, id: s.id }) : json({ error: "stripe_create_failed", detail: s }, 502);
+    }
+
+    if (action === "stripe_capture") {
+      if (!STRIPE_KEY) return json({ error: "stripe_not_configured" }, 500);
+      const sid = orderID;
+      if (!sid) return json({ error: "missing_session" }, 400);
+      const s = await (await fetch("https://api.stripe.com/v1/checkout/sessions/" + encodeURIComponent(sid), {
+        headers: { Authorization: STRIPE_AUTH },
+      })).json();
+      if (s.payment_status !== "paid") return json({ error: "payment_not_verified" }, 402);
+      const email = s?.customer_details?.email ?? buyer ?? null;
+      const code = await claim("stripe_" + sid, email);
+      if (code === "OUT_OF_STOCK") return json({ error: "out_of_stock" }, 409);
+      if (!code) return json({ error: "claim_failed" }, 500);
+      const emailed = email ? await sendCodeEmail(email, code) : false;
+      return json({ code, emailed });
+    }
+
+    // ---------- PayPal ----------
     const token = await ppToken();
 
     if (action === "create") {
