@@ -70,20 +70,32 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
   try {
-    const { action, orderID, buyer } = await req.json().catch(() => ({}));
+    const { action, orderID, buyer, return_url, cancel_url } = await req.json().catch(() => ({}));
     const token = await ppToken();
 
     if (action === "create") {
+      const app_ctx: Record<string, unknown> = {
+        brand_name: "Play Coffee",
+        user_action: "PAY_NOW",
+        shipping_preference: "NO_SHIPPING",
+      };
+      if (typeof return_url === "string" && return_url) {
+        app_ctx.return_url = return_url;
+        app_ctx.cancel_url = (typeof cancel_url === "string" && cancel_url) || return_url;
+      }
       const r = await fetch(`${PP_BASE}/v2/checkout/orders`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           intent: "CAPTURE",
           purchase_units: [{ amount: { currency_code: CURRENCY, value: AMOUNT }, description: "Play Coffee - License (Lifetime)" }],
+          application_context: app_ctx,
         }),
       });
       const o = await r.json();
-      return o.id ? json({ id: o.id }) : json({ error: "create_failed", detail: o }, 502);
+      if (!o.id) return json({ error: "create_failed", detail: o }, 502);
+      const approve = Array.isArray(o.links) ? (o.links.find((l: any) => l.rel === "approve") || {}).href : undefined;
+      return json({ id: o.id, approve });
     }
 
     if (action === "capture") {
