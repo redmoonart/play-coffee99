@@ -23,6 +23,47 @@ const SR = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const REST = `${SUPA_URL}/rest/v1`;
 const DB = { apikey: SR, Authorization: `Bearer ${SR}`, "Content-Type": "application/json" };
 
+// Gmail SMTP (optional email delivery)
+const GMAIL_USER = Deno.env.get("GMAIL_USER") ?? "";
+const GMAIL_PASS = Deno.env.get("GMAIL_APP_PASSWORD") ?? "";
+
+function emailHtml(code: string): string {
+  return `<!doctype html><html dir="rtl" lang="ar"><body style="margin:0;background:#0f1830;font-family:Tahoma,Arial,sans-serif;padding:24px">
+  <div style="max-width:460px;margin:auto;background:#1a2850;border:1px solid #2a3a68;border-radius:18px;padding:28px;color:#eef4ff;text-align:right">
+    <div style="text-align:center;font-size:22px;font-weight:900;margin-bottom:8px">Play <span style="color:#37d6e0">Coffee</span></div>
+    <p style="color:#a8b7d6;text-align:center;margin:0 0 18px">شكراً لشرائك! هذا رمز التفعيل الخاص بك</p>
+    <div style="font-size:24px;font-weight:900;letter-spacing:2px;color:#37d6e0;background:#0f1830;border:1px dashed #37d6e0;border-radius:14px;padding:16px;text-align:center;direction:ltr">${code}</div>
+    <div style="background:#0f1830;border:1px solid #2a3a68;border-radius:12px;padding:14px;margin-top:18px;color:#a8b7d6;font-size:14px;line-height:1.9">
+      <b style="color:#37d6e0">خطوات التفعيل:</b><br>
+      ١) افتح تطبيق Play Coffee على جهازك.<br>
+      ٢) أدخل هذا الكود في شاشة التفعيل.<br>
+      ٣) اضغط «تفعيل» — ويعمل التطبيق مدى الحياة.
+    </div>
+    <p style="color:#7688b0;font-size:12px;text-align:center;margin-top:18px">احتفظ بالكود. يعمل على جهاز واحد فقط.</p>
+  </div></body></html>`;
+}
+
+async function sendCodeEmail(to: string, code: string): Promise<boolean> {
+  if (!GMAIL_USER || !GMAIL_PASS || !to) return false;
+  try {
+    const { SMTPClient } = await import("https://deno.land/x/denomailer@1.6.0/mod.ts");
+    const client = new SMTPClient({
+      connection: { hostname: "smtp.gmail.com", port: 465, tls: true, auth: { username: GMAIL_USER, password: GMAIL_PASS } },
+    });
+    await client.send({
+      from: `Play Coffee <${GMAIL_USER}>`,
+      to,
+      bcc: GMAIL_USER,
+      subject: "رمز تفعيل Play Coffee",
+      html: emailHtml(code),
+    });
+    await client.close();
+    return true;
+  } catch (_e) {
+    return false;
+  }
+}
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -113,7 +154,8 @@ Deno.serve(async (req) => {
       const code = await claim(orderID, payerEmail);
       if (code === "OUT_OF_STOCK") return json({ error: "out_of_stock" }, 409);
       if (!code) return json({ error: "claim_failed" }, 500);
-      return json({ code });
+      const emailed = payerEmail ? await sendCodeEmail(payerEmail, code) : false;
+      return json({ code, emailed });
     }
 
     return json({ error: "unknown_action" }, 400);
