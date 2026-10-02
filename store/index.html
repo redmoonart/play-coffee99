@@ -231,6 +231,10 @@
             <label for="email">بريدك الإلكتروني (لإرسال الكود احتياطياً)</label>
             <input id="email" type="email" inputmode="email" placeholder="example@email.com" autocomplete="email">
           </div>
+          <div class="field">
+            <label for="agent">رمز الوكيل (اختياري)</label>
+            <input id="agent" type="text" placeholder="مثال: الجزائر-أحمد" autocomplete="off">
+          </div>
           <button class="cta" id="payBtn" type="button">ادفع عبر PayPal — $15</button>
           <div style="text-align:center;color:var(--dim);font-size:.85rem;margin:.7rem 0">— أو —</div>
           <button class="cta2" id="stripeBtn" type="button">💳 ادفع بالبطاقة (Visa / Mastercard)</button>
@@ -286,8 +290,8 @@
     $("err").classList.remove("show");
     const btn=$("payBtn"); btn.disabled=true; $("spin").classList.add("show");
     try{
-      const email=$("email").value.trim();
-      if(email){ try{ localStorage.setItem("pc_buyer_email", email); }catch(e){} }
+      const email=$("email").value.trim(); const agent=$("agent").value.trim();
+      try{ if(email) localStorage.setItem("pc_buyer_email", email); localStorage.setItem("pc_agent", agent||""); }catch(e){}
       const r=await edge("create",{ return_url: cleanUrl() });
       if(r && r.approve){ location.href=r.approve; }
       else { showErr("تعذّر بدء الدفع. حاول مرة أخرى."); btn.disabled=false; $("spin").classList.remove("show"); }
@@ -299,8 +303,8 @@
     $("err").classList.remove("show");
     const btn=$("stripeBtn"); btn.disabled=true; $("spin").classList.add("show");
     try{
-      const email=$("email").value.trim();
-      if(email){ try{ localStorage.setItem("pc_buyer_email", email); }catch(e){} }
+      const email=$("email").value.trim(); const agent=$("agent").value.trim();
+      try{ if(email) localStorage.setItem("pc_buyer_email", email); localStorage.setItem("pc_agent", agent||""); }catch(e){}
       const r=await edge("stripe_create",{ return_url: cleanUrl() });
       if(r && r.url){ location.href=r.url; }
       else { showErr("تعذّر بدء الدفع بالبطاقة. حاول مرة أخرى."); btn.disabled=false; $("spin").classList.remove("show"); }
@@ -315,12 +319,12 @@
     const wrap=document.getElementById("buywrap");
     $("buysec").style.display="none"; $("done").style.display="none";
     wrap.innerHTML='<div class="buycard" style="text-align:center"><div class="spin show" style="font-size:1.05rem">جارٍ تأكيد الدفع وتجهيز كودك…</div></div>';
-    let email=null; try{ email=localStorage.getItem("pc_buyer_email"); }catch(e){}
-    const r=await edge("stripe_capture",{orderID:sess, buyer:email});
+    let email=null, ag=null; try{ email=localStorage.getItem("pc_buyer_email"); ag=localStorage.getItem("pc_agent"); }catch(e){}
+    const r=await edge("stripe_capture",{orderID:sess, buyer:email, agent:ag});
     if(r && r.code){
       wrap.innerHTML=""; wrap.appendChild(document.getElementById("done"));
       document.getElementById("done").style.display=""; showCode(r.code);
-      try{ localStorage.removeItem("pc_buyer_email"); }catch(e){}
+      try{ localStorage.removeItem("pc_buyer_email"); localStorage.removeItem("pc_agent"); }catch(e){}
       history.replaceState({},"",cleanUrl());
     } else if(r && r.error==="out_of_stock"){
       wrap.innerHTML='<div class="buycard" style="text-align:center"><div class="err show">نفدت الأكواد مؤقتاً. تواصل معنا.</div></div>';
@@ -346,12 +350,12 @@
       wrap.innerHTML='<div class="buycard" style="text-align:center"><div class="err show">تم إلغاء الدفع. <a href="'+cleanUrl()+'" style="color:var(--cyan)">حاول مرة أخرى</a></div></div>';
       return;
     }
-    let email=null; try{ email=localStorage.getItem("pc_buyer_email"); }catch(e){}
-    const r=await edge("capture",{orderID:token, buyer:email});
+    let email=null, ag=null; try{ email=localStorage.getItem("pc_buyer_email"); ag=localStorage.getItem("pc_agent"); }catch(e){}
+    const r=await edge("capture",{orderID:token, buyer:email, agent:ag});
     if(r && r.code){
       wrap.innerHTML=""; wrap.appendChild(document.getElementById("done"));
       document.getElementById("done").style.display=""; showCode(r.code);
-      try{ localStorage.removeItem("pc_buyer_email"); }catch(e){}
+      try{ localStorage.removeItem("pc_buyer_email"); localStorage.removeItem("pc_agent"); }catch(e){}
       history.replaceState({},"",cleanUrl());
     } else if(r && r.error==="out_of_stock"){
       wrap.innerHTML='<div class="buycard" style="text-align:center"><div class="err show">نفدت الأكواد مؤقتاً. تواصل معنا وسنرسل لك الكود أو نعيد المبلغ.</div></div>';

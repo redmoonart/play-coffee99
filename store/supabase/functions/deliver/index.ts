@@ -91,10 +91,13 @@ async function ppToken(): Promise<string> {
 }
 
 // اسحب كوداً متاحاً وعلّمه مُباعاً — ذرّي عبر شرط source=code في التحديث
-async function claim(orderID: string, email: string | null): Promise<string | null> {
-  // مُسلّم من قبل لنفس الطلب؟
+// agent: رمز الوكيل (اختياري) يُخزَّن داخل source بالصيغة sold:<order>|agent:<name>
+async function claim(orderID: string, email: string | null, agent?: string | null): Promise<string | null> {
+  const cleanAgent = (agent || "").toString().trim().replace(/[|]/g, "").slice(0, 40);
+  const marker = "sold:" + orderID + (cleanAgent ? "|agent:" + cleanAgent : "");
+  // مُسلّم من قبل لنفس الطلب؟ (نطابق بادئة sold:<order>)
   const seen = await (await fetch(
-    `${REST}/licenses?select=code&source=eq.${encodeURIComponent("sold:" + orderID)}`, { headers: DB },
+    `${REST}/licenses?select=code&source=like.${encodeURIComponent("sold:" + orderID + "*")}`, { headers: DB },
   )).json();
   if (Array.isArray(seen) && seen.length) return seen[0].code;
 
@@ -107,7 +110,7 @@ async function claim(orderID: string, email: string | null): Promise<string | nu
     const upd = await (await fetch(
       `${REST}/licenses?code=eq.${encodeURIComponent(code)}&source=eq.code`,
       { method: "PATCH", headers: { ...DB, Prefer: "return=representation" },
-        body: JSON.stringify({ source: "sold:" + orderID, phone: email }) },
+        body: JSON.stringify({ source: marker, phone: email }) },
     )).json();
     if (Array.isArray(upd) && upd.length) return code; // نجح الحجز
     // تعارض — جرّب كوداً آخر
@@ -119,7 +122,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
   try {
-    const { action, orderID, buyer, return_url, cancel_url } = await req.json().catch(() => ({}));
+    const { action, orderID, buyer, agent, return_url, cancel_url } = await req.json().catch(() => ({}));
 
     // ---------- Stripe (card) ----------
     if (action === "stripe_create") {
@@ -152,7 +155,7 @@ Deno.serve(async (req) => {
       })).json();
       if (s.payment_status !== "paid") return json({ error: "payment_not_verified" }, 402);
       const email = s?.customer_details?.email ?? buyer ?? null;
-      const code = await claim("stripe_" + sid, email);
+      const code = await claim("stripe_" + sid, email, agent);
       if (code === "OUT_OF_STOCK") return json({ error: "out_of_stock" }, 409);
       if (!code) return json({ error: "claim_failed" }, 500);
       const emailed = email ? await sendCodeEmail(email, code) : false;
@@ -199,7 +202,7 @@ Deno.serve(async (req) => {
       if (!paid) return json({ error: "payment_not_verified", detail: cap }, 402);
 
       const payerEmail = cap?.payer?.email_address ?? buyer ?? null;
-      const code = await claim(orderID, payerEmail);
+      const code = await claim(orderID, payerEmail, agent);
       if (code === "OUT_OF_STOCK") return json({ error: "out_of_stock" }, 409);
       if (!code) return json({ error: "claim_failed" }, 500);
       const emailed = payerEmail ? await sendCodeEmail(payerEmail, code) : false;
