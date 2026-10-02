@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Play Coffee — لوحة الوكلاء</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700&display=swap">
+<style>
+  :root{
+    color-scheme: dark;
+    --navy:#0f1830; --navy-2:#16223f; --card:#1a2850; --line:#2a3a68;
+    --ink:#eef4ff; --soft:#a8b7d6; --dim:#7688b0; --cyan:#37d6e0; --purple:#8b5cff; --green:#26ad85;
+    --font-d:"Cairo","Tajawal",system-ui,sans-serif; --font-b:"Tajawal","Cairo",system-ui,sans-serif;
+    --grad:linear-gradient(90deg,var(--cyan),var(--purple));
+  }
+  *{box-sizing:border-box}
+  body{margin:0;direction:rtl;text-align:right;background:
+      radial-gradient(900px 480px at 88% -4%, rgba(55,214,224,.12), transparent 60%),
+      radial-gradient(820px 460px at 6% 8%, rgba(139,92,255,.12), transparent 58%),var(--navy);
+    color:var(--ink);font-family:var(--font-b);line-height:1.7;-webkit-font-smoothing:antialiased;min-height:100vh}
+  .wrap{max-width:900px;margin:auto;padding:24px 16px}
+  h1,h2{font-family:var(--font-d);font-weight:900;margin:0}
+  .brand{display:flex;align-items:center;gap:.6rem;font-family:var(--font-d);font-weight:900;font-size:1.3rem;justify-content:center;margin-bottom:.4rem}
+  .brand .tile{width:40px;height:40px;border-radius:11px;background:var(--grad);display:grid;place-items:center}
+  .brand b{color:var(--cyan)}
+  .sub{text-align:center;color:var(--soft);margin-bottom:1.6rem}
+  .card{background:linear-gradient(165deg,var(--card),var(--navy-2));border:1px solid var(--line);border-radius:20px;padding:22px}
+  /* login */
+  #login{max-width:380px;margin:3rem auto}
+  label{display:block;font-size:.85rem;color:var(--soft);margin-bottom:.4rem;font-weight:700}
+  input{width:100%;padding:.8rem .9rem;border-radius:12px;border:1px solid var(--line);background:var(--navy);color:var(--ink);font-family:var(--font-b);font-size:1rem}
+  input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(55,214,224,.18)}
+  .btn{display:block;width:100%;margin-top:1rem;border:none;cursor:pointer;font-family:var(--font-d);font-weight:800;font-size:1rem;color:#08111f;background:var(--grad);border-radius:999px;padding:.85rem}
+  .err{display:none;color:#ff8a7a;text-align:center;font-weight:700;margin-top:.8rem}
+  .err.show{display:block}
+  /* dashboard */
+  #dash{display:none}
+  .toolbar{display:flex;gap:.8rem;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;margin-bottom:1.2rem}
+  .rate{display:flex;align-items:center;gap:.5rem}
+  .rate input{width:90px}
+  .mini{font-size:.8rem;color:var(--dim)}
+  .btn-sm{width:auto;margin:0;padding:.55rem 1.2rem;font-size:.9rem}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1.3rem}
+  @media(max-width:620px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:var(--navy);border:1px solid var(--line);border-radius:14px;padding:.9rem}
+  .kpi .v{font-family:var(--font-d);font-weight:900;font-size:1.5rem;font-variant-numeric:tabular-nums}
+  .kpi .v.cy{color:var(--cyan)} .kpi .v.pu{color:var(--purple)} .kpi .v.gr{color:var(--green)}
+  .kpi .k{font-size:.78rem;color:var(--dim);margin-top:.2rem}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  th,td{padding:.75rem .6rem;text-align:right;border-bottom:1px solid var(--line);font-size:.95rem}
+  th{font-family:var(--font-d);font-weight:700;color:var(--soft);font-size:.82rem}
+  tr:last-child td{border-bottom:none}
+  .agent{font-family:var(--font-d);font-weight:700}
+  .num{color:var(--soft)} .share{color:var(--green);font-weight:700} .comm{color:var(--cyan);font-weight:700}
+  .empty{text-align:center;color:var(--dim);padding:2rem}
+  .updated{text-align:center;color:var(--dim);font-size:.78rem;margin-top:1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><span class="tile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 8h11v5a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8Z" fill="#0f1830"/><path d="M15 9h2.5a2.5 2.5 0 0 1 0 5H15" stroke="#0f1830" stroke-width="1.6"/><path d="M6 3v2M9 3v2M12 3v2" stroke="#0f1830" stroke-width="1.6" stroke-linecap="round"/></svg></span> Play <b>Coffee</b></div>
+  <p class="sub">لوحة تتبّع مبيعات الوكلاء</p>
+
+  <div id="login" class="card">
+    <label for="pass">كلمة سر اللوحة</label>
+    <input id="pass" type="password" placeholder="••••••••" autocomplete="current-password">
+    <button class="btn" id="loginBtn" type="button">دخول</button>
+    <div class="err" id="loginErr">كلمة السر غير صحيحة</div>
+  </div>
+
+  <div id="dash">
+    <div class="toolbar">
+      <div class="rate">
+        <label style="margin:0">نسبة الوكيل %</label>
+        <input id="rate" type="number" min="0" max="100" value="20">
+      </div>
+      <div style="display:flex;gap:.6rem">
+        <button class="btn btn-sm btn-ghost" id="logoutBtn" type="button">خروج</button>
+        <button class="btn btn-sm" id="refreshBtn" type="button">تحديث</button>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="v cy" id="kSales">0</div><div class="k">إجمالي المبيعات</div></div>
+      <div class="kpi"><div class="v" id="kGross">0</div><div class="k">إجمالي الدخل</div></div>
+      <div class="kpi"><div class="v pu" id="kComm">0</div><div class="k">عمولات الوكلاء</div></div>
+      <div class="kpi"><div class="v gr" id="kNet">0</div><div class="k">صافي نصيبك</div></div>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr><th>الوكيل</th><th>المبيعات</th><th>الدخل</th><th>عمولته</th><th>نصيبك</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty" id="empty" style="display:none">لا توجد مبيعات بعد.</div>
+    </div>
+    <div class="updated" id="updated"></div>
+  </div>
+</div>
+
+<script>
+  const CONFIG = {
+    EDGE_URL: "https://dobpocmsdtftudwfloaf.supabase.co/functions/v1/deliver",
+    SUPABASE_ANON: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvYnBvY21zZHRmdHVkd2Zsb2FmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNjQ1NjYsImV4cCI6MjEwNTg0MDU2Nn0.4UFcvNHfX3-Rk870MyXUaHqyKynOV3m6wHaupZ87p_M"
+  };
+  const $=(id)=>document.getElementById(id);
+  let timer=null;
+  function money(n,cur){ return (Math.round(n*100)/100).toLocaleString('en-US') + " " + cur; }
+
+  async function fetchReport(pass){
+    const res=await fetch(CONFIG.EDGE_URL,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+CONFIG.SUPABASE_ANON},body:JSON.stringify({action:"report",pass})});
+    return {status:res.status, data: await res.json()};
+  }
+  function render(d){
+    const price=parseFloat(d.price)||0, cur=d.currency||"USD", rate=(parseFloat($("rate").value)||0)/100;
+    const rows=$("rows"); rows.innerHTML="";
+    let gross=0, comm=0;
+    (d.agents||[]).forEach(a=>{
+      const g=a.count*price, c=g*rate, net=g-c; gross+=g; comm+=c;
+      const tr=document.createElement("tr");
+      tr.innerHTML='<td class="agent">'+a.name+'</td><td class="num">'+a.count+'</td><td class="num">'+money(g,cur)+'</td><td class="comm">'+money(c,cur)+'</td><td class="share">'+money(net,cur)+'</td>';
+      rows.appendChild(tr);
+    });
+    $("empty").style.display=(d.agents&&d.agents.length)?"none":"block";
+    $("kSales").textContent=d.total||0;
+    $("kGross").textContent=money(gross,cur);
+    $("kComm").textContent=money(comm,cur);
+    $("kNet").textContent=money(gross-comm,cur);
+    $("updated").textContent="آخر تحديث: "+new Date().toLocaleString('ar');
+  }
+  async function load(){
+    let pass=""; try{ pass=localStorage.getItem("pc_admin")||""; }catch(e){}
+    const {status,data}=await fetchReport(pass);
+    if(status===200){ render(data); }
+    else { logout(); $("loginErr").textContent="انتهت الجلسة، سجّل الدخول"; $("loginErr").classList.add("show"); }
+  }
+  function showDash(){ $("login").style.display="none"; $("dash").style.display="block"; load(); if(timer)clearInterval(timer); timer=setInterval(load,30000); }
+  function logout(){ try{localStorage.removeItem("pc_admin");}catch(e){} $("dash").style.display="none"; $("login").style.display="block"; if(timer)clearInterval(timer); }
+
+  $("loginBtn").addEventListener("click", async ()=>{
+    const p=$("pass").value.trim(); $("loginErr").classList.remove("show");
+    const {status}=await fetchReport(p);
+    if(status===200){ try{localStorage.setItem("pc_admin",p);}catch(e){} showDash(); }
+    else { $("loginErr").textContent="كلمة السر غير صحيحة"; $("loginErr").classList.add("show"); }
+  });
+  $("pass").addEventListener("keydown",e=>{ if(e.key==="Enter") $("loginBtn").click(); });
+  $("refreshBtn").addEventListener("click", load);
+  $("rate").addEventListener("input", ()=>{ try{localStorage.setItem("pc_rate",$("rate").value);}catch(e){} load(); });
+  $("logoutBtn").addEventListener("click", logout);
+
+  try{ const r=localStorage.getItem("pc_rate"); if(r)$("rate").value=r; }catch(e){}
+  try{ if(localStorage.getItem("pc_admin")) showDash(); }catch(e){}
+</script>
+</body>
+</html>

@@ -27,6 +27,9 @@ const DB = { apikey: SR, Authorization: `Bearer ${SR}`, "Content-Type": "applica
 const STRIPE_KEY = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
 const STRIPE_AUTH = "Basic " + btoa(STRIPE_KEY + ":");
 
+// Admin dashboard password (for agent sales report)
+const ADMIN_PASS = Deno.env.get("ADMIN_PASS") ?? "";
+
 // Gmail SMTP (optional email delivery)
 const GMAIL_USER = Deno.env.get("GMAIL_USER") ?? "";
 const GMAIL_PASS = Deno.env.get("GMAIL_APP_PASSWORD") ?? "";
@@ -122,7 +125,28 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
   try {
-    const { action, orderID, buyer, agent, return_url, cancel_url } = await req.json().catch(() => ({}));
+    const { action, orderID, buyer, agent, return_url, cancel_url, pass } = await req.json().catch(() => ({}));
+
+    // ---------- Agent sales report (admin) ----------
+    if (action === "report") {
+      if (!ADMIN_PASS || pass !== ADMIN_PASS) return json({ error: "unauthorized" }, 401);
+      const rows = await (await fetch(
+        `${REST}/licenses?select=source&source=like.${encodeURIComponent("sold:*")}&limit=100000`, { headers: DB },
+      )).json();
+      const byAgent: Record<string, number> = {};
+      let total = 0;
+      if (Array.isArray(rows)) {
+        for (const r of rows) {
+          total++;
+          const src = (r.source || "") as string;
+          const i = src.indexOf("|agent:");
+          const a = i >= 0 ? src.slice(i + 7) : "— مباشر (بدون وكيل)";
+          byAgent[a] = (byAgent[a] || 0) + 1;
+        }
+      }
+      const agents = Object.entries(byAgent).map(([name, count]) => ({ name, count })).sort((x, y) => y.count - x.count);
+      return json({ price: AMOUNT, currency: CURRENCY, total, agents });
+    }
 
     // ---------- Stripe (card) ----------
     if (action === "stripe_create") {
